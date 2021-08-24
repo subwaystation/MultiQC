@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """graph
+    """grapfloath
     The MultiQC module to parse and plot odgi stats output.
     """
 
@@ -225,6 +225,13 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
             "hidden": True,
         }
+        headers["file_size_in_gigabytes"] = {
+            "title": "File Size in Gigabytes",
+            "description": "File size in gigabytes.",
+            "scale": "RdYlGn",
+            "format": "{:,.5f}",
+            "hidden": True,
+        }
         # Some of the headers are quite general and can clash with other modules.
         # Prepend odgi_ to keep them unique
         prefix_headers = OrderedDict()
@@ -314,6 +321,8 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot([self.odgi_stats_map, self.odgi_stats_map], cats, pconfig),
         )
 
+    # TODO add additional argument to find out if there are more than two odgi stats yamls that have smooth and seqwish
+    #  in their graph names
     def extract_sample_name(self, file_name):
         """
         Extracts the sample name from a given file name.
@@ -335,6 +344,13 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Compress odgi stats into a single dictionary to visualize.
         """
+        if "file_size_in_bytes" in data:
+            file_size_in_bytes = float(data["file_size_in_bytes"])
+            print(file_size_in_bytes)
+            file_size_in_gigabytes = file_size_in_bytes / (1024 * 1024 * 1024)
+            print(file_size_in_gigabytes)
+        else:
+            file_size_in_gigabytes = "nan"
         mean_links_length = data["mean_links_length"]
         # we have to find the entry with path: 'all_paths', because odgi stats could emit a list of path names
         for l in mean_links_length:
@@ -358,6 +374,7 @@ class MultiqcModule(BaseMultiqcModule):
             "N": float(data.get("N", 0)),
             "total": float(data["num_nodes_self_loops"]["total"]),
             "unique": float(data["num_nodes_self_loops"]["unique"]),
+            "file_size_in_gigabytes": float(file_size_in_gigabytes),
             "mean_links_length_path": length["path"],
             "mean_links_length_in_node_space": length["in_node_space"],
             "mean_links_length_in_nucleotide_space": length["in_nucleotide_space"],
