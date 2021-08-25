@@ -49,6 +49,32 @@ class MultiqcModule(BaseMultiqcModule):
         # Plot detailed odgi stats in an extra section
         self.odgi_stats_table()
 
+        cats = ["core", "private", "shell"]
+        config_local = {
+            'hide_zero_cats': False,
+        }
+
+        datas = []
+        for sample in self.odgi_stats_map.keys():
+            datas.append(self.odgi_stats_map[sample])
+        print(datas)
+
+        # TODO we need to check if any of the YAML have this information
+        if len(self.odgi_stats_map["DRB1-3123.gfa"]["pangenome_sequence_class_counts"]) != 0:
+            self.add_section(
+                name="test",
+                anchor="pangenome_sequence_class_counts",
+                description="""
+                    BLALABALB
+                """,
+                helptext="""
+                    Does this help you?!
+                """,
+                plot=bargraph.plot(datas,
+                                   cats=cats, pconfig=config_local),
+            )
+
+
         # Plot the odgi stats metrics as a lineplot
         self.plot_sum_of_path_nodes_distances()
         self.plot_mean_links_length()
@@ -346,11 +372,15 @@ class MultiqcModule(BaseMultiqcModule):
         """
         if "file_size_in_bytes" in data:
             file_size_in_bytes = float(data["file_size_in_bytes"])
-            print(file_size_in_bytes)
             file_size_in_gigabytes = file_size_in_bytes / (1024 * 1024 * 1024)
-            print(file_size_in_gigabytes)
         else:
             file_size_in_gigabytes = "nan"
+        if "pangenome_sequence_class_counts" in data:
+            # TODO remove this
+            # print(next(iter(data["pangenome_sequence_class_counts"][0])))
+            pangenome_sequence_class_counts = data["pangenome_sequence_class_counts"]
+        else:
+            pangenome_sequence_class_counts = []
         mean_links_length = data["mean_links_length"]
         # we have to find the entry with path: 'all_paths', because odgi stats could emit a list of path names
         for l in mean_links_length:
@@ -375,6 +405,7 @@ class MultiqcModule(BaseMultiqcModule):
             "total": float(data["num_nodes_self_loops"]["total"]),
             "unique": float(data["num_nodes_self_loops"]["unique"]),
             "file_size_in_gigabytes": float(file_size_in_gigabytes),
+            "pangenome_sequence_class_counts": pangenome_sequence_class_counts,
             "mean_links_length_path": length["path"],
             "mean_links_length_in_node_space": length["in_node_space"],
             "mean_links_length_in_nucleotide_space": length["in_nucleotide_space"],
